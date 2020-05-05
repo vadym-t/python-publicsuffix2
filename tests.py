@@ -49,8 +49,8 @@ class TestPublicSuffix(unittest.TestCase):
         psl = publicsuffix.PublicSuffixList([])
         assert 'com' == psl.get_sld('com')
         assert 'com' == psl.get_sld('COM')
-        # '.com' -> <empty>.<com> -> None, empty labels are not allowed
-        assert None == psl.get_sld('.com')
+        # '.com' -> <com> -> 'com'
+        assert 'com' == psl.get_sld('.com')
         # 'a.example.com', strict=False -> <a>.<example:sll>.<com:tld> -> 'example.com'
         assert 'example.com' == psl.get_sld('a.example.com')
 
@@ -81,8 +81,7 @@ class TestPublicSuffix(unittest.TestCase):
 
     def test_get_sld_from_list_with_fqdn(self):
         psl = publicsuffix.PublicSuffixList(['com'])
-        # 'example.com.' -> <example>.<com>.<empty> -> None, empty labels are not allowed
-        assert None == psl.get_sld('example.com.')
+        assert 'example.com' == psl.get_sld('example.com.')
 
     def test_get_sld_from_list_with_unicode(self):
         psl = publicsuffix.PublicSuffixList([u'\u0440\u0444'], idna=False)
@@ -107,13 +106,11 @@ class TestPublicSuffixUsingTheCurrentVendoredPSL(unittest.TestCase):
 
     def test_get_sld_from_builtin_full_publicsuffix_org_list_with_leading_dot(self):
         psl = publicsuffix.PublicSuffixList(None)
-        # '.com' -> <empty>.<com> -> None, empty labels are not allowed
-        assert None == psl.get_sld('.com')
-        # '.example' -> <empty>.<example> -> None, empty labels are not allowed
-        assert None == psl.get_sld('.example')
         assert 'example.com' == psl.get_sld('.example.com')
         # note: non-strict mode: TLD 'example' -> SLD example.example
         assert 'example.example' == psl.get_sld('.example.example')
+        # strict mode
+        assert None == psl.get_sld('.example.example', strict=True)
 
     def test_get_sld_from_builtin_full_publicsuffix_org_list_with_unlisted_tld(self):
         psl = publicsuffix.PublicSuffixList(None)
@@ -252,8 +249,8 @@ class TestPublicSuffixGetSldIdna(unittest.TestCase):
 
     def test_get_tld_returns_correct_tld_or_etld_for_fqdn(self):
         psl = publicsuffix.PublicSuffixList()
-        # note: empty label or dot on the right side is not allowed
-        assert None == psl.get_tld('www.foo.com.')
+        assert 'com' == psl.get_tld('www.foo.com.')
+        assert 'co.uk' == psl.get_tld('www.foo.co.uk')
 
     def test_get_tld_returns_correct_tld_or_etld_for_root_domain(self):
         psl = publicsuffix.PublicSuffixList()
@@ -297,8 +294,7 @@ class TestPublicSuffixGetSld(unittest.TestCase):
 
     def test_get_sld_backward_compatibility_sld_for_fqdn(self):
         psl = publicsuffix.PublicSuffixList()
-        # 'www.foo.com.' -> <www>.<foo>.<com>.<empty> -> None, empty labels are not allowed
-        assert None == psl.get_sld('www.foo.com.')
+        assert 'foo.com' == psl.get_sld('www.foo.com.')
 
     def test_get_sld_backward_compatibility_sld_for_root_domain(self):
         psl = publicsuffix.PublicSuffixList()

@@ -260,7 +260,8 @@ class PublicSuffixList(object):
         """
         if not domain or len(domain) == 0:
             return None
-        domain = domain.lower()
+        domain = domain.lower().strip('.')
+
         return self.get_sld_unsafe(domain, wildcard, strict)
 
     def get_sld_unsafe(self, domain, wildcard=True, strict=False):
@@ -322,7 +323,7 @@ class PublicSuffixList(object):
         """
         if domain is None:
             return None
-        domain = domain.lower()
+        domain = domain.lower().strip('.')
 
         return self.get_tld_unsafe(domain, wildcard, strict)
 
@@ -387,7 +388,7 @@ class PublicSuffixList(object):
         tld = domain[tld_start + 1:] if tld_start is not None else None
         return tld or None  # empty string -> None
 
-    def get_components(self, domain: str, wildcard=True, strict=False) -> (str, str, str):
+    def get_components(self, domain, wildcard=True, strict=False):
         """
         Returns 3-tuple of components of the domain name: (prefix, SLL, TLD/eTLD)
         where
@@ -432,10 +433,10 @@ class PublicSuffixList(object):
         """
         if not domain or len(domain) == 0:
             return None, None, None
-        domain = domain.lower()
+        domain = domain.lower().strip('.')
         return self.get_components_unsafe(domain, wildcard, strict)
 
-    def get_components_unsafe(self, domain: str, wildcard=True, strict=False) -> (str, str, str):
+    def get_components_unsafe(self, domain, wildcard=True, strict=False):
         """
         This is unsafe method that does not checks if the domain is None. Also it does
         not perform conversion of the domain into lowercase.
