@@ -147,6 +147,11 @@ an invalid TLD will return None.::
     >>> psl.get_public_suffix('www.mine.local', strict=True) is None
     True
 
+Keep in mind that 'valid' is determined by the list that the PSL object is created from, and is not necessarily the
+Mozilla list. You can create a version with your own lists, for example, using only the ICANN public suffixes, or
+ICANN TLDS, or some other custom list.  In all cases, strict=True will verify that the right most label of the lookup
+item is contained in the list.
+
 **Return eTLD only.** The standard use case for publicsuffix2 is to return the registrable,
 or base, domain
 according to the public suffix list. In some cases, however, we only wish to find the eTLD
@@ -161,6 +166,34 @@ All of the methods and functions include the wildcard and strict parameters.
 
 For convenience, the public method get_sld() is available. This is identical to the method
 get_public_suffix() and is intended to clarify the output for some users.
+
+**Accelerated Functions**
+
+If your data is already normalized to lowercase with trailing dots, e.g., 'com.' or '.com' removed, you can use
+functions that will perform much faster by avoiding these element-wise operations on the input data.::
+
+    psl.get_sld_unsafe('www.google.com')
+    'google.com'
+    psl.get_tld_unsafe('www.google.co.uk')
+    'co.uk'
+
+**Edge Case Processing**
+
+Domain names occur in many sources and varieties, including use cases from urls, dns data, and emails. All of these,
+particularly at large volume, may have improperly formatted data and noise. In order to provide backward compatibility
+across these cases, the user is left to deal with some edge cases in their own data. The library chooses to lowercase
+and remove trailing and leading dots from domains. This means that inputs that are technically invalid DNS domains
+will generally return a value. For example, empty labels are invalid in DNS and thus '..google.com' is not a valid
+domain, however, this library will return a value::
+
+    psl.get_sld('..google.com')
+    'google.com'
+
+Users who wish to remove invalid DNS labels will need to clean their data prior to using the library functions.
+However, domains that contain empty labels in the middle will return None.::
+
+    psl.get_sld('google..com') ==  None
+    True
 
 To **update the bundled suffix list** use the provided setup.py command::
 
